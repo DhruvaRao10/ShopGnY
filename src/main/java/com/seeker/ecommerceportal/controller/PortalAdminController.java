@@ -85,9 +85,14 @@ public class PortalAdminController {
         return portalAdminService.fetchCustomerOrderById(order_id);
     }
 
-    @PostMapping("/addinventory")
-    public Inventory addInventoryById(@Valid @RequestBody  Inventory inventory) {
-        return portalAdminService.addInventoryById(inventory.getItem().getItem_id(),inventory.getItem_qty());
-    }
+//    @PostMapping("/addinventory")
+//    public Inventory addInventoryById(@Valid @RequestBody  Inventory inventory) {
+//        return portalAdminService.addInventoryById(inventory.getItem().getItem_id(),inventory.getItem_qty());
+//    }
+   @PostMapping("/addinventory")
+   public Long addinventory(@Valid @RequestBody InventoryPayload payload){
+       return portalAdminService.addInventory(payload);
+   }
+
 
 }

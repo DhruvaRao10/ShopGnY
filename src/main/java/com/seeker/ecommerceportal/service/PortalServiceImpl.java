@@ -48,6 +48,9 @@ public class PortalServiceImpl implements  PortalService {
     @Autowired
     private ReturnsRepository returnRepository;
 
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
     @Override
     public List<Item> fetchItemsList() {
         return itemRepository.findAll();
@@ -96,50 +99,60 @@ public class PortalServiceImpl implements  PortalService {
         // List<OrderItem> orderItems = orderItemRepository.find.getOrder_id()
         return 0L;
     }
-    public CustomerOrderPayload saveCustomerOrder(CustomerOrderPayload customerOrderPayload){
-        Customer customer = customerRepository.findById(customerOrderPayload.getCustomer_id()).get();
-        LOGGER.info(customer.toString());
-        List<OrderItemPayload> orderItemPayloadList = customerOrderPayload.getOrderItems();
-        LOGGER.info(" Count of customer order items "+orderItemPayloadList.size());
 
-        CustomerOrder customerOrder = new CustomerOrder();
-        customerOrder.setCustomer(customer);
-        customerOrder.setShippingAddress(customerOrderPayload.getShippingAddress());
-        customerOrder.setOrderDate(java.time.Instant.now());
-        customerOrderRepository.save(customerOrder);
+        public CustomerOrderPayload saveCustomerOrder(CustomerOrderPayload customerOrderPayload){
+            Customer customer = customerRepository.findById(customerOrderPayload.getCustomer_id()).get();
+            LOGGER.info(customer.toString());
+            List<OrderItemPayload> orderItemPayloadList = customerOrderPayload.getOrderItems();
+            LOGGER.info(" Count of customer order items "+orderItemPayloadList.size());
 
-
-        //save order items
-        java.util.Iterator iter = orderItemPayloadList.iterator();
-
-        OrderItemPayload orderItemPayload;
-        OrderItem orderItem;
-        LOGGER.info("orderItemPayload[1] "+ orderItemPayloadList.get(0).toString());
-        Long billAmt = 0L;
-        for(int i = 0; i < orderItemPayloadList.size(); i++){
-            orderItemPayload = (OrderItemPayload)  orderItemPayloadList.get(i);
-            LOGGER.info("orderItemPayload = "+ orderItemPayload.toString());
-            Long itemId = orderItemPayload.getItem_id() ;
-            Long itemQty = orderItemPayload.getOrderitemqty() ;
+            CustomerOrder customerOrder = new CustomerOrder();
+            customerOrder.setCustomer(customer);
+            customerOrder.setShippingAddress(customerOrderPayload.getShippingAddress());
+            customerOrder.setOrderDate(java.time.Instant.now());
+            customerOrderRepository.save(customerOrder);
 
 
+            //save order items
+            java.util.Iterator iter = orderItemPayloadList.iterator();
 
-            billAmt +=  itemRepository.findById(orderItemPayload.getItem_id()).get().getItem_price() *
+            OrderItemPayload orderItemPayload;
+            OrderItem orderItem;
+            LOGGER.info("orderItemPayload[1] "+ orderItemPayloadList.get(0).toString());
+            Long billAmt = 0L;
+
+            Inventory inventory;
+
+            for(int i = 0; i < orderItemPayloadList.size(); i++){
+                orderItemPayload = (OrderItemPayload)  orderItemPayloadList.get(i);
+                LOGGER.info("orderItemPayload = "+ orderItemPayload.toString());
+                Long itemId = orderItemPayload.getItem_id() ;
+                Long itemQty = orderItemPayload.getOrderitemqty() ;
+
+
+
+                billAmt +=  itemRepository.findById(orderItemPayload.getItem_id()).get().getItem_price() *
                         orderItemPayload.getOrderitemqty();
 
 
-            orderItem = new OrderItem();
-            orderItem.setItem(itemRepository.findById(orderItemPayload.getItem_id()).get());
-            orderItem.setOrder(customerOrder);
-            orderItem.setOrderItemQty(orderItemPayload.getOrderitemqty());
-            orderItemRepository.save(orderItem);
-        }
-        // generate a bill
-        Bill bill = new Bill();
-        bill.setCustomerOrder(customerOrder);
-        bill.setBill_amt(billAmt);
-        billRepository.save(bill);
-        return customerOrderPayload;
+                orderItem = new OrderItem();
+                orderItem.setItem(itemRepository.findById(orderItemPayload.getItem_id()).get());
+                orderItem.setOrder(customerOrder);
+                orderItem.setOrderItemQty(orderItemPayload.getOrderitemqty());
+                orderItemRepository.save(orderItem);
+
+                // update inventory
+                inventory =  inventoryRepository.findByItemId(orderItemPayload.getItem_id());
+                inventory.setItemQty(inventory.getItemQty() - orderItemPayload.getOrderitemqty());
+                inventoryRepository.save(inventory);
+
+            }
+            // generate a bill
+            Bill bill = new Bill();
+            bill.setCustomerOrder(customerOrder);
+            bill.setBill_amt(billAmt);
+            billRepository.save(bill);
+            return customerOrderPayload;
     }
 
 

@@ -41,5 +41,7 @@ public interface PortalAdminService {
 
 
 
-    public Inventory addInventoryById(Long itemId,Long itemQty);
+//    public Inventory addInventoryById(Long itemId,Long itemQty);
+
+   public  Long addInventory(InventoryPayload payload);
 }

@@ -125,15 +125,24 @@ public class  PortalAdminServiceImpl implements  PortalAdminService {
 
 
     @Override
-    public Inventory addInventoryById(Long itemId,Long itemQty) {
-        Inventory inventory = inventoryRepository.findById(itemId).get() ;
-        Long existingQty = inventory.getItem_qty() ;
-        inventory.setItem_qty(itemQty+existingQty);
-        inventoryRepository.update(inventory);
-        return inventory;
-//        inventoryRepository.findById(itemQty) ;
-
+    public Long addInventory(InventoryPayload payload) {
+        Optional<Inventory> inventoryList = inventoryRepository.findById(payload.getItemId());
+        Inventory inventory = null;
+        Item item;
+        if(inventoryList.isEmpty()){
+            inventory = new Inventory();
+            item = itemRepository.findById(payload.getItemId()).get();
+            inventory.setItem(item);
+            inventory.setItemQty(payload.getItemQty());
+        }
+        else {
+            inventory = inventoryList.get();
+            inventory.setItemQty(inventory.getItemQty() + payload.getItemQty());
+        }
+        inventoryRepository.save(inventory);
+        return  inventory.getItemQty();
     }
+
 
 
 }

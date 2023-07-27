@@ -15,15 +15,16 @@ import lombok.NoArgsConstructor;
 @Builder
 
 public class Inventory {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long inventory_id;
+    private Long itemQty;
 
-    private Long item_qty ;
 
     @ManyToOne
     @JoinColumn(name= "item_id")
     @MapsId
-    @Id
-    private Item item ;
-
+    private Item item;
 
 
 }

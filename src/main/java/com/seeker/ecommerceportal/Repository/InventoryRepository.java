@@ -9,10 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory,Long> {
-    //@Transactional
-    //@Modifying
-    //@Query("update Inventory i set i.item_qty = ?1")
-    //int updateInventory(Long item_qty);
-
-    void update(Inventory inventory);
+    @Query("select s from Inventory s  where s.item.item_id = ?1")
+    Inventory findByItemId(Long itemId);
 }
